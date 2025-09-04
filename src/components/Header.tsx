@@ -1,18 +1,33 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, LogOut, User } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Header = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, profile, signOut, loading } = useAuth();
 
   const navigation = [
     { name: "Browse Ads", href: "/browse" },
     { name: "Post Ad", href: "/post" },
     { name: "Our Story", href: "/story" },
-    { name: "Guidelines", href: "/guidelines" }
+    { name: "Guidelines", href: "/guidelines" },
+    { name: "Support", href: "/support" }
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <header className="bg-card shadow-soft border-b border-border sticky top-0 z-50">
@@ -47,9 +62,52 @@ const Header = () => {
               <Search className="h-4 w-4" />
               Search
             </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/post">Post Your Ad</Link>
-            </Button>
+            
+            {loading ? (
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            ) : user ? (
+              <>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/post">Post Your Ad</Link>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-xs">
+                          {profile?.display_name?.[0] || user.email?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden lg:inline">
+                        {profile?.display_name || user.email?.split('@')[0]}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile">
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -86,9 +144,26 @@ const Header = () => {
                   <Search className="h-4 w-4" />
                   Search
                 </Button>
-                <Button variant="hero" size="sm" asChild>
-                  <Link to="/post">Post Your Ad</Link>
-                </Button>
+                {user ? (
+                  <>
+                    <Button variant="hero" size="sm" asChild>
+                      <Link to="/post">Post Your Ad</Link>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/auth">Sign In</Link>
+                    </Button>
+                    <Button variant="hero" size="sm" asChild>
+                      <Link to="/auth">Get Started</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

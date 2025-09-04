@@ -10,6 +10,7 @@ import BrowseAds from "./pages/BrowseAds";
 import AdDetail from "./pages/AdDetail";
 import PostAd from "./pages/PostAd";
 import Auth from "./pages/Auth";
+import ContactSupport from "./pages/ContactSupport";
 import OurStory from "./pages/OurStory";
 import CommunityGuidelines from "./pages/CommunityGuidelines";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
                 <Route path="/ad/:id" element={<AdDetail />} />
                 <Route path="/post" element={<PostAd />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/support" element={<ContactSupport />} />
                 <Route path="/story" element={<OurStory />} />
                 <Route path="/guidelines" element={<CommunityGuidelines />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

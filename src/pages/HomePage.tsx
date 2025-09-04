@@ -6,40 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Calendar, DollarSign, Users, Shield, Clock } from "lucide-react";
 
 const HomePage = () => {
-  // Mock data for latest ads
-  const latestAds = [
-    {
-      id: 1,
-      title: "Cozy 2BR Near UGA Campus",
-      university: "University of Georgia",
-      complex: "The Standard Athens",
-      price: 650,
-      dates: "May - July 2024",
-      image: "/placeholder.svg",
-      isPremium: true
-    },
-    {
-      id: 2,
-      title: "Spacious Studio at Georgia Tech",
-      university: "Georgia Tech",
-      complex: "West Village",
-      price: 850,
-      dates: "June - August 2024",
-      image: "/placeholder.svg",
-      isPremium: false
-    },
-    {
-      id: 3,
-      title: "Shared Apartment in Midtown",
-      university: "Georgia Tech",
-      complex: "SQ5 Apartments",
-      price: 750,
-      dates: "Summer 2024",
-      image: "/placeholder.svg",
-      isPremium: true
-    }
-  ];
-
   const howItWorksSteps = [
     {
       icon: <Search className="h-8 w-8 text-primary" />,
@@ -49,7 +15,7 @@ const HomePage = () => {
     {
       icon: <Users className="h-8 w-8 text-primary" />,
       title: "Connect Safely",
-      description: "Message directly through our platform or comment publicly on listings."
+      description: "Message directly through our secure platform with verified students only."
     },
     {
       icon: <Shield className="h-8 w-8 text-primary" />,
@@ -83,8 +49,8 @@ const HomePage = () => {
                     className="pl-10 h-12 bg-card shadow-soft"
                   />
                 </div>
-                <Button variant="hero" size="lg">
-                  Search
+                <Button variant="hero" size="lg" asChild>
+                  <Link to="/browse">Search</Link>
                 </Button>
               </div>
             </div>
@@ -115,21 +81,21 @@ const HomePage = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {howItWorksSteps.map((step, index) => (
-              <Card key={index} className="text-center shadow-card border-0">
-                <CardContent className="pt-8">
-                  <div className="flex justify-center mb-4">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+        {howItWorksSteps.map((step, index) => (
+          <Card key={index} className="text-center shadow-card border-0">
+            <CardContent className="pt-8">
+              <div className="flex justify-center mb-4">
+                {step.icon}
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                {step.title}
+              </h3>
+              <p className="text-muted-foreground">
+                {step.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
           </div>
         </div>
       </section>
@@ -151,42 +117,21 @@ const HomePage = () => {
             </Button>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {latestAds.map((ad) => (
-              <Card key={ad.id} className={`shadow-card transition-smooth hover:shadow-premium ${ad.isPremium ? 'border-premium shadow-premium' : ''}`}>
-                {ad.isPremium && (
-                  <div className="bg-gradient-premium text-premium-foreground px-3 py-1 text-xs font-medium rounded-t-lg">
-                    Featured 🍑
-                  </div>
-                )}
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg line-clamp-2">{ad.title}</CardTitle>
-                    <Badge variant="secondary" className="shrink-0 ml-2">
-                      ${ad.price}/mo
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{ad.complex}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{ad.dates}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">
-                      {ad.university}
-                    </p>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4" asChild>
-                    <Link to={`/ad/${ad.id}`}>View Details</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="text-center py-12">
+            <div className="max-w-md mx-auto">
+              <div className="h-32 w-32 bg-muted/50 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <span className="text-4xl">🍑</span>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                No listings yet
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Be the first to post a sublease! Help build our community of verified student housing.
+              </p>
+              <Button variant="hero" asChild>
+                <Link to="/post">Post the First Sublease</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

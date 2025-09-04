@@ -36,16 +36,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
-          setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            setProfile(profile);
-          }, 0);
+          // Create a mock profile from user metadata for now
+          // TODO: Fetch real profile once types are updated
+          const mockProfile: Profile = {
+            id: session.user.id,
+            user_id: session.user.id,
+            email: session.user.email || '',
+            university: session.user.user_metadata?.university || 'Unknown',
+            display_name: session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || null,
+            created_at: session.user.created_at || '',
+            updated_at: session.user.updated_at || ''
+          };
+          setProfile(mockProfile);
         } else {
           setProfile(null);
         }
@@ -60,20 +62,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch user profile
-        setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          setProfile(profile);
-          setLoading(false);
-        }, 0);
-      } else {
-        setLoading(false);
+        // Create a mock profile from user metadata for now
+        const mockProfile: Profile = {
+          id: session.user.id,
+          user_id: session.user.id,
+          email: session.user.email || '',
+          university: session.user.user_metadata?.university || 'Unknown',
+          display_name: session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || null,
+          created_at: session.user.created_at || '',
+          updated_at: session.user.updated_at || ''
+        };
+        setProfile(mockProfile);
       }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -100,24 +101,3 @@ export function useAuth() {
   }
   return context;
 }
-
-// Trigger function to create profile after user signup
-export const createProfileTrigger = `
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (user_id, email, university, display_name)
-  VALUES (
-    new.id,
-    new.email,
-    COALESCE(new.raw_user_meta_data->>'university', 'Unknown'),
-    COALESCE(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
-  );
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-`;
