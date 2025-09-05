@@ -43,13 +43,16 @@ const OurStory = () => {
                   </p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-6 text-center">
-                  <div className="h-32 bg-muted rounded-lg flex items-center justify-center mb-4">
-                    <span className="text-muted-foreground">Photo of Anirudh & Gio</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    The founders brainstorming in their Athens apartment
-                  </p>
-                </div>
+  <img
+    src="/images/anirudhandgio.jpg"
+    alt="Anirudh and Gio brainstorming in their Athens apartment"
+    className="w-full h-48 object-cover rounded-lg mb-4"
+  />
+  
+  <p className="text-sm text-muted-foreground">
+    The founders brainstorming in their Athens apartment
+  </p>
+</div>
               </div>
             </CardContent>
           </Card>
