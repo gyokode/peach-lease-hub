@@ -32,7 +32,7 @@ const OurStory = () => {
                     The Frustration That Started It All
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-4">
-                    Picture this: It's March 2024, and Anirudh and Gio are desperately trying 
+                    Picture this: It's August 2025, and Anirudh and Gio are desperately trying 
                     to find summer housing. They're scrolling through endless Facebook groups, 
                     dealing with sketchy Craigslist posts, and getting ghosted by random strangers.
                   </p>
