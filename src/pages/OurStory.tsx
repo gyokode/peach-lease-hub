@@ -44,7 +44,7 @@ const OurStory = () => {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-6 text-center">
   <img
-    src="/images/anirudhandgio.jpg"
+    src="/images/anirudhgio.jpg"
     alt="Anirudh and Gio brainstorming in their Athens apartment"
     className="w-full h-48 object-cover rounded-lg mb-4"
   />
