@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,7 @@ const HomePage = () => {
           <div className="max-w-3xl mx-auto">
             <span className="text-6xl mb-6 block">🍑</span>
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              Find your home away from home — with ease.
+              Find your home away from home with ease
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               The trusted platform built by Georgia students, for Georgia students. 
@@ -47,10 +48,24 @@ const HomePage = () => {
                   <Input 
                     placeholder="Search apartments, complexes, or areas..." 
                     className="pl-10 h-12 bg-card shadow-soft"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const searchTerm = (e.target as HTMLInputElement).value;
+                        window.location.href = `/browse?search=${encodeURIComponent(searchTerm)}`;
+                      }
+                    }}
                   />
                 </div>
-                <Button variant="hero" size="lg" asChild>
-                  <Link to="/browse">Search</Link>
+                <Button 
+                  variant="hero" 
+                  size="lg" 
+                  onClick={() => {
+                    const searchInput = document.querySelector('input[placeholder*="Search apartments"]') as HTMLInputElement;
+                    const searchTerm = searchInput?.value || '';
+                    window.location.href = `/browse?search=${encodeURIComponent(searchTerm)}`;
+                  }}
+                >
+                  Search
                 </Button>
               </div>
             </div>

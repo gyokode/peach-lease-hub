@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      housing_ads: {
+        Row: {
+          amenities: string[] | null
+          bathrooms: number
+          bedrooms: number
+          complex_name: string | null
+          created_at: string
+          dates_available: string
+          description: string | null
+          id: string
+          is_premium: boolean | null
+          price: number
+          title: string
+          university: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          bathrooms: number
+          bedrooms: number
+          complex_name?: string | null
+          created_at?: string
+          dates_available: string
+          description?: string | null
+          id?: string
+          is_premium?: boolean | null
+          price: number
+          title: string
+          university: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amenities?: string[] | null
+          bathrooms?: number
+          bedrooms?: number
+          complex_name?: string | null
+          created_at?: string
+          dates_available?: string
+          description?: string | null
+          id?: string
+          is_premium?: boolean | null
+          price?: number
+          title?: string
+          university?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

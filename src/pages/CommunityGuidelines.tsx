@@ -275,8 +275,8 @@ const CommunityGuidelines = () => {
                 don't hesitate to reach out.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="secondary" size="lg">
-                  Contact Support
+                <Button variant="secondary" size="lg" asChild>
+                  <Link to="/support">Contact Support</Link>
                 </Button>
                 <Button variant="outline" size="lg" className="bg-card text-foreground hover:bg-muted" asChild>
                   <Link to="/story">Learn About Us</Link>

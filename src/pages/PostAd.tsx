@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,119 +8,124 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, DollarSign, Calendar, MapPin, Home, Star, AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, X, DollarSign, Calendar, Users, Home, MapPin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { useHousingAds } from "@/hooks/useHousingAds";
 
 const PostAd = () => {
-  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const { user, profile, loading: authLoading } = useAuth();
+  const { createAd } = useHousingAds();
+
+  // Form state
   const [formData, setFormData] = useState({
-    university: "",
-    complex: "",
     title: "",
+    description: "",
     price: "",
-    startDate: "",
-    endDate: "",
     bedrooms: "",
     bathrooms: "",
-    description: "",
-    amenities: [] as string[],
-    isPremium: false
+    datesAvailable: "",
+    complex: "",
+    university: "",
   });
+  
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [customAmenity, setCustomAmenity] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect to auth if not logged in
-  if (!loading && !user) {
-    return (
-      <div className="min-h-screen py-8 bg-gradient-subtle">
-        <div className="container mx-auto px-4 max-w-md text-center">
-          <span className="text-4xl mb-4 block">🍑</span>
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            Sign In Required
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            You need to sign in with a verified .edu email to post a sublease.
-          </p>
-          <Button variant="hero" asChild>
-            <Link to="/auth">Sign In / Sign Up</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
-  if (loading) {
+  // Predefined amenities
+  const amenitiesList = [
+    "Swimming Pool", "Gym/Fitness Center", "Parking", "Laundry", "Pet Friendly",
+    "Study Rooms", "Rooftop Access", "Balcony", "In-Unit Washer/Dryer", 
+    "Dishwasher", "Air Conditioning", "Heating", "High-Speed Internet",
+    "Cable TV", "Security System", "Elevator", "Courtyard", "BBQ Area"
+  ];
+
+  const addAmenity = (amenity: string) => {
+    if (!selectedAmenities.includes(amenity)) {
+      setSelectedAmenities([...selectedAmenities, amenity]);
+    }
+  };
+
+  const removeAmenity = (amenity: string) => {
+    setSelectedAmenities(selectedAmenities.filter(a => a !== amenity));
+  };
+
+  const addCustomAmenity = () => {
+    if (customAmenity.trim() && !selectedAmenities.includes(customAmenity.trim())) {
+      setSelectedAmenities([...selectedAmenities, customAmenity.trim()]);
+      setCustomAmenity("");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.title || !formData.price || !formData.bedrooms || !formData.bathrooms || !formData.university || !formData.datesAvailable) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    const { data, error } = await createAd({
+      title: formData.title,
+      description: formData.description || null,
+      price: parseFloat(formData.price),
+      bedrooms: parseInt(formData.bedrooms),
+      bathrooms: parseInt(formData.bathrooms),
+      dates_available: formData.datesAvailable,
+      amenities: selectedAmenities.length > 0 ? selectedAmenities : null,
+      complex_name: formData.complex || null,
+      university: formData.university,
+      is_premium: false
+    });
+
+    if (error) {
+      toast({
+        title: "Error Creating Listing",
+        description: error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Sublease Posted Successfully! 🍑",
+        description: "Your listing is now live and visible to other students.",
+      });
+      navigate("/browse");
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  if (authLoading) {
     return (
-      <div className="min-h-screen py-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 bg-muted animate-pulse rounded mx-auto mb-4"></div>
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-4 text-center">
+          <div className="h-32 w-32 bg-muted/50 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <span className="text-4xl">🍑</span>
+          </div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
-  const availableAmenities = [
-    "Pool", "Gym", "Parking", "WiFi Included", "Pet Friendly", 
-    "Laundry", "Study Rooms", "Rooftop", "Balcony", "Bus Route",
-    "Dishwasher", "Air Conditioning", "Heating", "Security"
-  ];
-
-  const handleAmenityToggle = (amenity: string) => {
-    setFormData(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity]
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) return;
-    
-    // Validate required fields
-    if (!formData.university || !formData.complex || !formData.title || 
-        !formData.price || !formData.startDate || !formData.endDate || 
-        !formData.bedrooms || !formData.bathrooms || !formData.description) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // TODO: Connect to Supabase once types are updated
-      // Simulate posting for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Sublease posted successfully!",
-        description: "Your listing is now live and visible to other students.",
-      });
-
-      navigate('/browse');
-    } catch (error: any) {
-      toast({
-        title: "Error posting sublease",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  if (!user) {
+    return null; // Will redirect to auth
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -189,15 +194,15 @@ const PostAd = () => {
                     <SelectValue placeholder="Select your university" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="uga">University of Georgia</SelectItem>
-                    <SelectItem value="gatech">Georgia Tech</SelectItem>
+                    <SelectItem value="University of Georgia">University of Georgia</SelectItem>
+                    <SelectItem value="Georgia Tech">Georgia Tech</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Complex Name */}
               <div>
-                <Label htmlFor="complex">Apartment Complex / Building *</Label>
+                <Label htmlFor="complex">Apartment Complex / Building</Label>
                 <Input
                   id="complex"
                   placeholder="e.g., The Standard Athens, West Village"
@@ -244,26 +249,15 @@ const PostAd = () => {
                 </div>
               </div>
 
-              {/* Dates */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Available From *</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">Available Until *</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                  />
-                </div>
+              {/* Dates Available */}
+              <div>
+                <Label htmlFor="datesAvailable">Dates Available *</Label>
+                <Input
+                  id="datesAvailable"
+                  placeholder="e.g., May - July 2024, Summer 2024, Fall Semester"
+                  value={formData.datesAvailable}
+                  onChange={(e) => setFormData(prev => ({ ...prev, datesAvailable: e.target.value }))}
+                />
               </div>
             </CardContent>
           </Card>
@@ -272,7 +266,7 @@ const PostAd = () => {
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+                <Users className="h-5 w-5" />
                 Property Details
               </CardTitle>
             </CardHeader>
@@ -317,10 +311,10 @@ const PostAd = () => {
 
               {/* Description */}
               <div>
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  placeholder="Describe your space, location benefits, what makes it special, any important details..."
+                  placeholder="Describe your space, what makes it special, any house rules..."
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -332,77 +326,76 @@ const PostAd = () => {
           {/* Amenities */}
           <Card className="shadow-card">
             <CardHeader>
-              <CardTitle>Amenities</CardTitle>
+              <CardTitle>Amenities & Features</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-3">
-                {availableAmenities.map((amenity) => (
-                  <div key={amenity} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={amenity}
-                      checked={formData.amenities.includes(amenity)}
-                      onCheckedChange={() => handleAmenityToggle(amenity)}
-                    />
-                    <Label htmlFor={amenity} className="text-sm">
-                      {amenity}
-                    </Label>
+            <CardContent className="space-y-6">
+              {/* Selected Amenities */}
+              {selectedAmenities.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Selected Amenities</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAmenities.map((amenity, index) => (
+                      <Badge key={index} variant="default" className="text-sm">
+                        {amenity}
+                        <button
+                          type="button"
+                          onClick={() => removeAmenity(amenity)}
+                          className="ml-2 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              )}
 
-          {/* Photos */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle>Photos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border-2 border-dashed border-border p-8 rounded-lg text-center">
-                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">
-                  Upload photos of your space
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Good photos help your listing get more interest
-                </p>
-                <Button variant="outline">
-                  Choose Files
-                </Button>
+              {/* Available Amenities */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Available Amenities</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {amenitiesList.map((amenity, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={amenity}
+                        checked={selectedAmenities.includes(amenity)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            addAmenity(amenity);
+                          } else {
+                            removeAmenity(amenity);
+                          }
+                        }}
+                      />
+                      <Label htmlFor={amenity} className="text-sm">
+                        {amenity}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Premium Option */}
-          <Card className="shadow-card border-premium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-premium" />
-                Make It Stand Out
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="premium"
-                  checked={formData.isPremium}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, isPremium: !!checked }))
-                  }
-                />
-                <div className="flex-1">
-                  <Label htmlFor="premium" className="font-medium">
-                    Highlight my ad for $5 🍑
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Premium ads appear at the top of search results with special highlighting 
-                    and get 3x more views on average.
-                  </p>
-                  {formData.isPremium && (
-                    <Badge className="mt-2 gradient-premium text-premium-foreground">
-                      Premium Listing Selected
-                    </Badge>
-                  )}
+              {/* Custom Amenity */}
+              <div>
+                <Label htmlFor="customAmenity" className="text-sm font-medium mb-3 block">
+                  Add Custom Amenity
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="customAmenity"
+                    placeholder="e.g., Private Entrance, Garden Access"
+                    value={customAmenity}
+                    onChange={(e) => setCustomAmenity(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCustomAmenity();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={addCustomAmenity} variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -410,24 +403,20 @@ const PostAd = () => {
 
           {/* Submit */}
           <Card className="shadow-card">
-            <CardContent className="p-6">
+            <CardContent className="pt-6">
               <div className="text-center space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  By posting, you agree to our Community Guidelines and confirm 
-                  that all information is accurate.
+                <p className="text-muted-foreground text-sm">
+                  By posting this listing, you agree to our Community Guidelines and Terms of Service.
+                  All listings are subject to verification.
                 </p>
-                <Button 
-                  type="submit" 
-                  variant="hero" 
-                  size="lg"
-                  className="w-full md:w-auto"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Posting...' : 'Post My Sublease'}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Your listing will be visible to verified students immediately
-                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button type="button" variant="outline" onClick={() => navigate('/browse')}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting} className="min-w-32">
+                    {isSubmitting ? "Posting..." : "Post Sublease 🍑"}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
