@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Heart, Users, Shield, Lightbulb, Target, MapPin } from "lucide-react";
+import founderPhoto from '../anirudhgio.jpg';
 
 const OurStory = () => {
   return (
@@ -44,7 +45,7 @@ const OurStory = () => {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-6 text-center">
   <img
-    src="/src/anirudhgio.jpg"
+    src={founderPhoto}
     alt="Anirudh and Gio brainstorming in their Athens apartment"
     className="w-full h-48 object-cover rounded-lg mb-4"
   />
