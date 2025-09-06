@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          housing_ad_id: string | null
+          id: string
+          last_message_at: string
+          participant_one_id: string
+          participant_two_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          housing_ad_id?: string | null
+          id?: string
+          last_message_at?: string
+          participant_one_id: string
+          participant_two_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          housing_ad_id?: string | null
+          id?: string
+          last_message_at?: string
+          participant_one_id?: string
+          participant_two_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_housing_ad_id_fkey"
+            columns: ["housing_ad_id"]
+            isOneToOne: false
+            referencedRelation: "housing_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_verifications: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          verification_code: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          verification_code: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          verification_code?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       housing_ads: {
         Row: {
           amenities: string[] | null
@@ -64,6 +129,85 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      housing_images: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          housing_ad_id: string
+          id: string
+          image_path: string
+          image_url: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          housing_ad_id: string
+          id?: string
+          image_path: string
+          image_url: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          housing_ad_id?: string
+          id?: string
+          image_path?: string
+          image_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "housing_images_housing_ad_id_fkey"
+            columns: ["housing_ad_id"]
+            isOneToOne: false
+            referencedRelation: "housing_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          from_user_id: string
+          housing_ad_id: string | null
+          id: string
+          read_at: string | null
+          to_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          from_user_id: string
+          housing_ad_id?: string | null
+          id?: string
+          read_at?: string | null
+          to_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          from_user_id?: string
+          housing_ad_id?: string | null
+          id?: string
+          read_at?: string | null
+          to_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_housing_ad_id_fkey"
+            columns: ["housing_ad_id"]
+            isOneToOne: false
+            referencedRelation: "housing_ads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

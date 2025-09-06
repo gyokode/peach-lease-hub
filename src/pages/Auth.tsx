@@ -58,7 +58,7 @@ const Auth = () => {
     setError('');
 
     try {
-      const { error } = await supabase.functions.invoke('send-verification-email', {
+      const { data, error } = await supabase.functions.invoke('send-email-verification', {
         body: { 
           email,
           university: getUniversityFromEmail(email)
@@ -66,6 +66,11 @@ const Auth = () => {
       });
 
       if (error) throw error;
+      
+      // In development, show the code for testing
+      if (data?.code) {
+        console.log('Development verification code:', data.code);
+      }
 
       setVerificationStep(true);
       setUniversity(getUniversityFromEmail(email));

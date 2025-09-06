@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Menu, LogOut, User } from "lucide-react";
+import { Search, Menu, LogOut, User, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import SearchDialog from "./SearchDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ const Header = () => {
   const navigation = [
     { name: "Browse Ads", href: "/browse" },
     { name: "Post Ad", href: "/post" },
+    { name: "Messages", href: "/messages" },
     { name: "Our Story", href: "/story" },
     { name: "Guidelines", href: "/guidelines" },
     { name: "Support", href: "/support" }
@@ -58,15 +60,23 @@ const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4" />
-              Search
-            </Button>
+            <SearchDialog>
+              <Button variant="outline" size="sm">
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+            </SearchDialog>
             
             {loading ? (
               <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
             ) : user ? (
               <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/messages">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Messages
+                  </Link>
+                </Button>
                 <Button variant="hero" size="sm" asChild>
                   <Link to="/post">Post Your Ad</Link>
                 </Button>
@@ -99,14 +109,9 @@ const Header = () => {
                 </DropdownMenu>
               </>
             ) : (
-              <>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/auth">Sign In</Link>
-                </Button>
-                <Button variant="hero" size="sm" asChild>
-                  <Link to="/auth">Get Started</Link>
-                </Button>
-              </>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth">Sign In</Link>
+              </Button>
             )}
           </div>
 
@@ -140,12 +145,20 @@ const Header = () => {
                 </Link>
               ))}
               <div className="flex flex-col space-y-2 pt-2">
-                <Button variant="outline" size="sm">
-                  <Search className="h-4 w-4" />
-                  Search
-                </Button>
+                <SearchDialog>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search
+                  </Button>
+                </SearchDialog>
                 {user ? (
                   <>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/messages">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Messages
+                      </Link>
+                    </Button>
                     <Button variant="hero" size="sm" asChild>
                       <Link to="/post">Post Your Ad</Link>
                     </Button>
@@ -155,14 +168,9 @@ const Header = () => {
                     </Button>
                   </>
                 ) : (
-                  <>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/auth">Sign In</Link>
-                    </Button>
-                    <Button variant="hero" size="sm" asChild>
-                      <Link to="/auth">Get Started</Link>
-                    </Button>
-                  </>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
                 )}
               </div>
             </nav>

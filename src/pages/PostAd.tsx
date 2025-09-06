@@ -12,6 +12,7 @@ import { ArrowLeft, Plus, X, DollarSign, Calendar, Users, Home, MapPin } from "l
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useHousingAds } from "@/hooks/useHousingAds";
+import ImageUpload from "@/components/ImageUpload";
 
 const PostAd = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const PostAd = () => {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [customAmenity, setCustomAmenity] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -320,6 +322,20 @@ const PostAd = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Images */}
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Property Photos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ImageUpload
+                images={images}
+                onImagesChange={setImages}
+                maxImages={8}
+              />
             </CardContent>
           </Card>
 
