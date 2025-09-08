@@ -36,15 +36,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Store verification code in database
-    const { error: dbError } = await supabase
-      .from('email_verifications')
-      .insert({
-        email,
-        verification_code: verificationCode,
-        expires_at: expiresAt.toISOString(),
-        verified: false
-      });
+    // Use secure database function to create verification
+    const { data, error: dbError } = await supabase.rpc('create_email_verification', {
+      p_email: email,
+      p_verification_code: verificationCode,
+      p_expires_at: expiresAt.toISOString()
+    });
 
     if (dbError) {
       console.error('Database error:', dbError);

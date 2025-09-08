@@ -32,36 +32,24 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Find the verification record
-    const { data: verification, error: fetchError } = await supabase
-      .from('email_verifications')
-      .select('*')
-      .eq('email', email)
-      .eq('verification_code', code)
-      .eq('verified', false)
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // Use secure database function to verify code
+    const { data: isValid, error: verifyError } = await supabase.rpc('verify_email_code', {
+      p_email: email,
+      p_verification_code: code
+    });
 
-    if (fetchError || !verification) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired verification code' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Mark as verified
-    const { error: updateError } = await supabase
-      .from('email_verifications')
-      .update({ verified: true })
-      .eq('id', verification.id);
-
-    if (updateError) {
-      console.error('Error updating verification:', updateError);
+    if (verifyError) {
+      console.error('Error verifying code:', verifyError);
       return new Response(
         JSON.stringify({ error: 'Failed to verify code' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!isValid) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired verification code' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

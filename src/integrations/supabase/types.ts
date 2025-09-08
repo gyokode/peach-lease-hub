@@ -218,6 +218,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      create_email_verification: {
+        Args: {
+          p_email: string
+          p_expires_at: string
+          p_verification_code: string
+        }
+        Returns: string
+      }
+      verify_email_code: {
+        Args: { p_email: string; p_verification_code: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
