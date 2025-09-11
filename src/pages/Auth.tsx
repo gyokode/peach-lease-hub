@@ -173,6 +173,26 @@ const Auth = () => {
     }
   };
 
+  const handleMicrosoftSignIn = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          scopes: 'email openid profile',
+        },
+      });
+      if (error) throw error;
+      toast({ title: 'Redirecting to Microsoft...', description: 'Continue the sign in with your .edu email.' });
+    } catch (error: any) {
+      setError(error.message || 'Failed to start Microsoft sign in');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 bg-gradient-subtle">
       <div className="container mx-auto px-4 max-w-md">
@@ -248,6 +268,17 @@ const Auth = () => {
                     >
                       {isLoading ? 'Sending...' : 'Send Verification Code'}
                       <Mail className="h-4 w-4 ml-2" />
+                    </Button>
+
+                    <div className="text-center text-xs text-muted-foreground my-2">or</div>
+
+                    <Button 
+                      onClick={handleMicrosoftSignIn}
+                      disabled={isLoading}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      Continue with Microsoft (.edu)
                     </Button>
                   </>
                 ) : (
@@ -361,6 +392,17 @@ const Auth = () => {
                   variant="hero"
                 >
                   {isLoading ? 'Signing In...' : 'Sign In'}
+                </Button>
+
+                <div className="text-center text-xs text-muted-foreground my-2">or</div>
+
+                <Button 
+                  onClick={handleMicrosoftSignIn}
+                  disabled={isLoading}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Continue with Microsoft (.edu)
                 </Button>
               </TabsContent>
             </Tabs>

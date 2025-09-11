@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import ImageUpload from "@/components/ImageUpload";
 
 const PostAd = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isDemo = new URLSearchParams(location.search).get('demo') === '1';
   const { toast } = useToast();
   const { user, profile, loading: authLoading } = useAuth();
   const { createAd } = useHousingAds();
@@ -38,10 +40,10 @@ const PostAd = () => {
   const [images, setImages] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !user && !isDemo) {
       navigate('/auth');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isDemo, navigate]);
 
   // Predefined amenities
   const amenitiesList = [
@@ -80,36 +82,51 @@ const PostAd = () => {
       return;
     }
 
-    setIsSubmitting(true);
-    
-    const { data, error } = await createAd({
-      title: formData.title,
-      description: formData.description || null,
-      price: parseFloat(formData.price),
-      bedrooms: parseInt(formData.bedrooms),
-      bathrooms: parseInt(formData.bathrooms),
-      dates_available: formData.datesAvailable,
-      amenities: selectedAmenities.length > 0 ? selectedAmenities : null,
-      complex_name: formData.complex || null,
-      university: formData.university,
-      is_premium: false
-    });
+  setIsSubmitting(true);
 
-    if (error) {
-      toast({
-        title: "Error Creating Listing",
-        description: error,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Sublease Posted Successfully! 🍑",
-        description: "Your listing is now live and visible to other students.",
-      });
-      navigate("/browse");
-    }
-    
+  if (isDemo) {
+    const demoAds = JSON.parse(localStorage.getItem('demo_ads') || '[]');
+    const newAd = {
+      id: `demo-ad-${Date.now()}`,
+      ...formData,
+      amenities: selectedAmenities,
+      created_at: new Date().toISOString(),
+    };
+    localStorage.setItem('demo_ads', JSON.stringify([newAd, ...demoAds]));
+    toast({ title: 'Sublease Saved (Demo Mode)', description: 'Your listing is saved locally for testing.' });
     setIsSubmitting(false);
+    navigate('/browse?demo=1');
+    return;
+  }
+  
+  const { data, error } = await createAd({
+    title: formData.title,
+    description: formData.description || null,
+    price: parseFloat(formData.price),
+    bedrooms: parseInt(formData.bedrooms),
+    bathrooms: parseInt(formData.bathrooms),
+    dates_available: formData.datesAvailable,
+    amenities: selectedAmenities.length > 0 ? selectedAmenities : null,
+    complex_name: formData.complex || null,
+    university: formData.university,
+    is_premium: false
+  });
+
+  if (error) {
+    toast({
+      title: "Error Creating Listing",
+      description: error,
+      variant: "destructive",
+    });
+  } else {
+    toast({
+      title: "Sublease Posted Successfully! 🍑",
+      description: "Your listing is now live and visible to other students.",
+    });
+    navigate("/browse");
+  }
+  
+  setIsSubmitting(false);
   };
 
   if (authLoading) {
@@ -125,7 +142,7 @@ const PostAd = () => {
     );
   }
 
-  if (!user) {
+  if (!user && !isDemo) {
     return null; // Will redirect to auth
   }
 
@@ -154,21 +171,21 @@ const PostAd = () => {
         </div>
 
         {/* User Info */}
-        {profile && (
+        {(profile || isDemo) && (
           <Card className="mb-8 bg-gradient-subtle border-0 shadow-soft">
             <CardContent className="p-6">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 bg-primary/20 rounded-full flex items-center justify-center">
                   <span className="text-primary font-medium">
-                    {profile.display_name?.[0] || profile.email[0]}
+                    {(profile?.display_name?.[0] || profile?.email?.[0]) ?? 'D'}
                   </span>
                 </div>
                 <div>
                   <h3 className="font-medium text-foreground mb-1">
-                    Posting as {profile.display_name || profile.email.split('@')[0]}
+                    Posting as {profile?.display_name || profile?.email?.split('@')[0] || 'Demo User'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {profile.university} • Verified .edu Student
+                    {(profile?.university || 'Demo University')} {isDemo && '• Demo Mode'}
                   </p>
                 </div>
               </div>

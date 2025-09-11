@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,16 +57,13 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Store verification code in database
+    // Store verification code using secure RPC
     const { data, error: dbError } = await supabase
-      .from('email_verifications')
-      .insert({
-        email,
-        verification_code: verificationCode,
-        expires_at: expiresAt.toISOString(),
-        verified: false
-      })
-      .select();
+      .rpc('create_email_verification', {
+        p_email: email,
+        p_verification_code: verificationCode,
+        p_expires_at: expiresAt.toISOString(),
+      });
 
     if (dbError) {
       console.error('Database error:', dbError);
@@ -77,10 +75,37 @@ serve(async (req) => {
 
     console.log('Verification code stored successfully:', data);
 
-    // In development, return the code for testing
     const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
-    
-    // Log the verification code for development/testing
+
+    // Attempt to send email via Resend if API key is configured
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (resendApiKey) {
+      try {
+        const resend = new Resend(resendApiKey);
+        const emailResponse = await resend.emails.send({
+          from: 'Peach Lease <onboarding@resend.dev>',
+          to: [email],
+          subject: 'Your Peach Lease verification code',
+          reply_to: 'peachleaser@gmail.com',
+          html: `<div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;line-height:1.6">
+            <h2>Verify your email</h2>
+            <p>Your verification code is:</p>
+            <div style="font-size:28px;font-weight:700;letter-spacing:4px">${verificationCode}</div>
+            <p>This code expires at ${expiresAt.toLocaleString()}.</p>
+            <p>If you didn't request this, you can ignore this email.</p>
+          </div>`,
+          text: `Your Peach Lease verification code is ${verificationCode}. It expires at ${expiresAt.toISOString()}.`,
+        });
+        console.log('Email sent via Resend:', emailResponse);
+      } catch (sendError) {
+        console.error('Failed to send verification email:', sendError);
+        // Don't fail the request if email sending fails; return code in development
+      }
+    } else {
+      console.warn('RESEND_API_KEY not set. Skipping email send.');
+    }
+
+    // Log details for development/testing
     console.log(`=== VERIFICATION CODE FOR ${email} ===`);
     console.log(`Code: ${verificationCode}`);
     console.log(`Expires at: ${expiresAt.toISOString()}`);
@@ -89,8 +114,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        message: 'Verification code sent successfully',
-        // Include code in development for testing
+        message: 'Verification code processed',
         ...(isDevelopment && { code: verificationCode })
       }),
       { 

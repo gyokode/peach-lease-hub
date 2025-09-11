@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Send, MessageCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface Conversation {
   id: string;
@@ -45,6 +45,8 @@ interface Message {
 const Messages = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+  const isDemo = new URLSearchParams(location.search).get('demo') === '1';
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -52,17 +54,22 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (isDemo) {
+      fetchConversationsDemo();
+    } else if (user) {
       fetchConversations();
     }
-  }, [user]);
+  }, [user, isDemo]);
 
   useEffect(() => {
-    if (selectedConversation) {
+    if (!selectedConversation) return;
+    if (isDemo) {
+      fetchMessagesDemo(selectedConversation);
+    } else {
       fetchMessages(selectedConversation);
       markMessagesAsRead(selectedConversation);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, isDemo]);
 
   const fetchConversations = async () => {
     try {
@@ -94,6 +101,28 @@ const Messages = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Demo mode implementations using localStorage
+  const fetchConversationsDemo = () => {
+    const stored = localStorage.getItem('demo_conversations');
+    let demoConvs: Conversation[] = stored ? JSON.parse(stored) : [];
+    if (demoConvs.length === 0) {
+      demoConvs = [
+        {
+          id: 'demo-conv-1',
+          participant_one_id: 'demo-user',
+          participant_two_id: 'demo-other',
+          housing_ad_id: undefined,
+          last_message_at: new Date().toISOString(),
+          other_user: { id: 'demo-other', display_name: 'Alex Student', email: 'alex@example.edu', university: 'Demo University' },
+          housing_ad: { id: 'demo-ad-1', title: 'Cozy 2BR Near Campus' },
+        },
+      ];
+      localStorage.setItem('demo_conversations', JSON.stringify(demoConvs));
+    }
+    setConversations(demoConvs);
+    setLoading(false);
   };
 
   const fetchMessages = async (conversationId: string) => {
@@ -129,6 +158,12 @@ const Messages = () => {
     }
   };
 
+  const fetchMessagesDemo = (conversationId: string) => {
+    const all = JSON.parse(localStorage.getItem('demo_messages') || '{}');
+    const msgs: Message[] = all[conversationId] || [];
+    setMessages(msgs);
+  };
+
   const markMessagesAsRead = async (conversationId: string) => {
     try {
       await supabase
@@ -143,7 +178,31 @@ const Messages = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !user) return;
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    if (isDemo) {
+      const all = JSON.parse(localStorage.getItem('demo_messages') || '{}');
+      const msgs: Message[] = all[selectedConversation] || [];
+      const newMsg: Message = {
+        id: `demo-${Date.now()}`,
+        from_user_id: 'demo-user',
+        to_user_id: 'demo-other',
+        content: newMessage.trim(),
+        created_at: new Date().toISOString(),
+        from_user: { display_name: 'You', email: 'you@example.edu' },
+      } as any;
+      const updated = [...msgs, newMsg];
+      all[selectedConversation] = updated;
+      localStorage.setItem('demo_messages', JSON.stringify(all));
+      setNewMessage("");
+      setMessages(updated);
+      // Update conversation time
+      const updatedConvs = conversations.map(c => c.id === selectedConversation ? { ...c, last_message_at: new Date().toISOString() } : c);
+      setConversations(updatedConvs);
+      return;
+    }
+
+    if (!user) return;
 
     const conversation = conversations.find(c => c.id === selectedConversation);
     if (!conversation) return;
@@ -162,7 +221,6 @@ const Messages = () => {
 
       if (error) throw error;
 
-      // Update conversation last_message_at
       await supabase
         .from('conversations')
         .update({ last_message_at: new Date().toISOString() })
@@ -180,7 +238,7 @@ const Messages = () => {
     }
   };
 
-  if (!user) {
+  if (!user && !isDemo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
         <Card className="p-8 text-center">
@@ -189,9 +247,14 @@ const Messages = () => {
           </CardHeader>
           <CardContent>
             <p className="mb-4">You need to be signed in to view messages.</p>
-            <Button asChild variant="hero">
-              <Link to="/auth">Sign In</Link>
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button asChild variant="hero">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/messages?demo=1">Try Demo Mode</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -210,7 +273,7 @@ const Messages = () => {
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Messages</h1>
+          <h1 className="text-3xl font-bold mb-2">Messages {isDemo && <span className="text-sm align-middle ml-2 px-2 py-1 rounded bg-muted">Demo</span>}</h1>
           <p className="text-muted-foreground">Connect with other students about housing</p>
         </div>
 

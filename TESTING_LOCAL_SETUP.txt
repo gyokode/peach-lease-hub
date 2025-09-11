@@ -1,0 +1,51 @@
+Peach Lease - Local Testing & Setup Guide
+
+1) Prerequisites
+- Node.js 18+
+- PNPM or NPM
+- Supabase project already connected (this repo is wired to https://qbnvqrllqhtkluhltgvj.supabase.co)
+
+2) Install & Run
+- Install deps: pnpm install (or npm install)
+- Start dev server: pnpm dev (or npm run dev)
+- Open the app at the printed URL
+
+3) Edge Functions (send-email-verification, verify-email-code)
+- These run on Supabase and are already deployed by Lovable.
+- To view logs: Supabase Dashboard > Edge Functions > send-email-verification / verify-email-code > Logs
+- Ensure CORS is allowed (already configured in the code).
+
+4) Sending Verification Emails via Resend (recommended)
+- Why? Browsers cannot send emails; servers need an email provider. Resend is simple and reliable.
+- Create a free account: https://resend.com
+- Create an API key: https://resend.com/api-keys
+- IMPORTANT: You cannot send from gmail.com via Resend. Use the default onboarding@resend.dev or verify your own domain (recommended) and set from: "Peach Lease <noreply@YOURDOMAIN>".
+- In Supabase, add the secret RESEND_API_KEY here: Project > Settings > Functions > Secrets.
+- No code changes required after adding the secret. The edge function will send emails automatically.
+
+5) Microsoft SSO (Azure) for .edu sign-in
+- In Supabase: Authentication > Providers > Azure AD. Enable it and add Client ID/Secret from Azure.
+- In Azure Portal: create an App Registration, add redirect URL: https://qbnvqrllqhtkluhltgvj.supabase.co/auth/v1/callback.
+- Also set your site URL and redirect URLs in Supabase under Authentication > URL Configuration to your app URL(s).
+- The Auth page already includes a "Continue with Microsoft (.edu)" button.
+
+6) Demo Mode (test without login)
+- Messaging: Visit /messages?demo=1 to test a local demo chat. Messages are saved to localStorage.
+- Post Sublease: Visit /post?demo=1 to post a demo listing saved to localStorage.
+- Switch back to real mode by removing ?demo=1 from the URL.
+
+7) Common Issues
+- "requested path is invalid" after auth: Set Site URL and Redirect URLs in Supabase (Authentication > URL Configuration).
+- No verification email: Ensure RESEND_API_KEY secret exists; check Edge Function logs.
+- .edu validation failing: Email must end with .edu in the signup flow.
+
+8) Production Notes
+- For branded emails, verify a custom domain in Resend: https://resend.com/domains (gmail.com cannot be used).
+- Consider enabling DKIM for best deliverability.
+
+Links
+- Supabase SQL Editor: https://supabase.com/dashboard/project/qbnvqrllqhtkluhltgvj/sql/new
+- Edge Functions: https://supabase.com/dashboard/project/qbnvqrllqhtkluhltgvj/functions
+- Function Logs (send-email-verification): https://supabase.com/dashboard/project/qbnvqrllqhtkluhltgvj/functions/send-email-verification/logs
+- Function Logs (verify-email-code): https://supabase.com/dashboard/project/qbnvqrllqhtkluhltgvj/functions/verify-email-code/logs
+- Storage Buckets: https://supabase.com/dashboard/project/qbnvqrllqhtkluhltgvj/storage/buckets
